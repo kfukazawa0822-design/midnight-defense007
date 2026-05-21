@@ -413,13 +413,14 @@ canvas{display:block;position:absolute;top:0;left:0;pointer-events:none;}
   display:grid;
   grid-template-columns:1fr 1fr;
   width:94%;max-width:860px;
-  gap:12px;align-items:stretch;
+  max-height:92vh;
+  gap:clamp(4px,1vh,12px);align-items:stretch;
 }
-.res-left{display:flex;flex-direction:column;gap:8px;}
+.res-left{display:flex;flex-direction:column;gap:clamp(3px,0.8vh,8px);}
 .res-score-panel{
   background:rgba(0,12,40,0.9);
   border:1px solid rgba(0,220,255,0.35);
-  padding:14px 18px;
+  padding:clamp(6px,1.2vh,14px) 18px;
   box-shadow:0 0 20px rgba(0,180,255,0.1),inset 0 0 30px rgba(0,100,200,0.05);
 }
 .res-score-lbl{
@@ -428,18 +429,18 @@ canvas{display:block;position:absolute;top:0;left:0;pointer-events:none;}
 }
 .res-score-val{
   font-family:'Orbitron',monospace;font-weight:900;
-  color:#fff;font-size:clamp(26px,4.5vw,48px);
+  color:#fff;font-size:clamp(18px,4.5vmin,48px);
   text-shadow:0 0 15px rgba(0,200,255,0.7);line-height:1;
 }
 .res-score-val .unit{font-size:0.4em;color:rgba(0,220,255,0.7);margin-left:6px;}
 .res-rank-panel{
   background:rgba(0,12,40,0.85);border:1px solid rgba(0,220,255,0.28);
-  padding:10px 18px;
+  padding:clamp(4px,0.8vh,10px) 18px;
 }
 .res-rank-lbl{font-family:'Share Tech Mono',monospace;color:rgba(0,220,255,0.6);font-size:clamp(8px,1.2vw,11px);letter-spacing:3px;text-align:left;}
 .res-rank{
   font-family:'Orbitron',monospace;font-weight:900;
-  font-size:clamp(44px,7vw,72px);line-height:1;
+  font-size:clamp(28px,7vmin,72px);line-height:1;
   width:100%;text-align:center;display:block;
   animation:rankPop 0.45s cubic-bezier(0.175,0.885,0.32,1.275) both;
 }
@@ -447,7 +448,7 @@ canvas{display:block;position:absolute;top:0;left:0;pointer-events:none;}
 .res-rank.A{color:#0ff;text-shadow:0 0 24px #0ff,0 0 50px rgba(0,255,255,0.35);}
 .res-rank.B{color:#0f0;text-shadow:0 0 24px #0f0;}
 .res-rank.C{color:#ff8c00;text-shadow:0 0 24px #ff8c00;}
-.res-stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 18px;background:rgba(0,12,40,0.8);border:1px solid rgba(0,220,255,0.2);}
+.res-stat-row{display:flex;justify-content:space-between;align-items:center;padding:clamp(3px,0.7vh,8px) 18px;background:rgba(0,12,40,0.8);border:1px solid rgba(0,220,255,0.2);}
 .res-stat-lbl{font-family:'Share Tech Mono',monospace;color:rgba(0,220,255,0.65);font-size:clamp(8px,1.3vw,11px);letter-spacing:2px;}
 .res-stat-val{font-family:'Orbitron',monospace;font-weight:700;color:#fff;font-size:clamp(13px,2vw,19px);}
 .res-stat-row.tempt .res-stat-lbl{color:rgba(255,120,80,0.75);}
@@ -476,7 +477,7 @@ canvas{display:block;position:absolute;top:0;left:0;pointer-events:none;}
   border:1px solid rgba(0,220,255,0.5);
   color:#0ff;font-family:'Orbitron',monospace;font-weight:700;
   font-size:clamp(10px,1.5vw,13px);letter-spacing:3px;
-  padding:10px 0;cursor:pointer;transition:all 0.14s;user-select:none;
+  padding:clamp(5px,1vh,10px) 0;cursor:pointer;transition:all 0.14s;user-select:none;
   text-shadow:0 0 8px #0ff;
 }
 .res-action-btn:hover{background:rgba(0,220,255,0.1);box-shadow:0 0 16px rgba(0,220,255,0.3);}
@@ -489,7 +490,7 @@ canvas{display:block;position:absolute;top:0;left:0;pointer-events:none;}
   display:flex;align-items:center;justify-content:center;
   color:rgba(0,200,255,0.15);font-family:'Share Tech Mono',monospace;
   font-size:10px;letter-spacing:3px;
-  min-height:200px;
+  min-height:clamp(80px,20vh,200px);
 }
 
 .sc.endless {
@@ -987,16 +988,32 @@ function resize(){
   buildBGData();
   const si = gs.stage||0;
   drawNeonCityBG(bgX, _gameW, _gameH, STAGES[Math.max(0,si)]);
+  scaleResWrap();
   scaleTutCard();
 }
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', ()=>setTimeout(resize, 150));
 
-// チュートリアルカード全体を画面サイズに収まるようscaleで制御する。
-// transform:scale() でカード全体を等比縮小するため
-// スクロールバーなしで画面内に自然に収まる。
+// ─── res-wrap全体を画面高さに収まるようscaleで制御 ───
+function scaleResWrap(){
+  const wrap = document.getElementById('resultScreen')?.querySelector('.res-wrap');
+  if(!wrap) return;
+  wrap.style.transform = '';
+  wrap.style.transformOrigin = '';
+  const naturalH = wrap.offsetHeight;
+  const naturalW = wrap.offsetWidth;
+  if(!naturalH || !naturalW) return;
+  const availH = _gameH * 0.92;
+  const availW = _gameW * 0.94;
+  const scale = Math.min(availH / naturalH, availW / naturalW, 1);
+  if(scale < 1){
+    wrap.style.transform = `scale(${scale.toFixed(4)})`;
+    wrap.style.transformOrigin = 'center center';
+  }
+}
+
+// ─── チュートリアルカード全体を画面サイズに収まるようscaleで制御 ───
 function scaleTutCard(){
-  const overlay = document.getElementById('tutorialOverlay');
   const card = document.getElementById('tutorialCard');
   if(!card) return;
   card.style.transform = '';
@@ -1406,7 +1423,6 @@ function showTutorial(si){
   card.style.animation='none'; void card.offsetWidth;
   card.style.animation='cardPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both';
   document.getElementById('tutorialOverlay').classList.add('active');
-  // DOM確定後にスケール計算（2フレーム待ちで offsetHeight が正確に取れる）
   requestAnimationFrame(()=>requestAnimationFrame(scaleTutCard));
 
   if(rainRaf){cancelAnimationFrame(rainRaf);rainRaf=null;}
@@ -1799,6 +1815,7 @@ function showResult(){
   }
 
   showScreen('result');
+  requestAnimationFrame(()=>requestAnimationFrame(scaleResWrap));
   if(raf) cancelAnimationFrame(raf);
   lastT=performance.now();
   raf=requestAnimationFrame(resultLoop);
